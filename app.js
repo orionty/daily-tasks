@@ -118,6 +118,15 @@ setInterval(() => {
         });
 
       sendEmailNotifications(tasks);
+
+      // Save the tasks back to the file
+      const textTasks = tasks.map((task) => `${task.date} ${task.time} - ${task.text} - ${task.completed}`).join('\n');
+      fs.writeFile(TASKS_FILE_PATH, textTasks, 'utf8', (writeErr) => {
+        if (writeErr) {
+          console.error('Error writing tasks back to file:', writeErr);
+        }
+      });
     }
   });
 }, 60000); // 1 minute interval
+
