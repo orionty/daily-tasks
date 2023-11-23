@@ -13,14 +13,6 @@ app.use(cors());
 
 const TASKS_FILE_PATH = 'tasks.txt';
 
-// Nodemailer configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
 
 app.post('/saveTasks', (req, res) => {
   const tasks = req.body;
@@ -65,68 +57,9 @@ app.get('/getTasks', (req, res) => {
     }
   });
 });
-// Send email notifications for approaching tasks
-const sendEmailNotifications = (tasks) => {
-  const currentTime = new Date();
-
-  tasks.forEach((task) => {
-    const taskDateTime = new Date(`${task.date} ${task.time}`);
-    const timeDiff = taskDateTime.getTime() - currentTime.getTime();
-    const minutesDiff = Math.floor(timeDiff / (1000 * 60));
-
-    // Send email notification 15 minutes before the task time
-    if (minutesDiff > 0 && minutesDiff <= 15) {
-      const mailOptions = {
-        from: process.env.GMAIL_USER,
-        to: process.env.RECIPIENT_EMAIL,
-        subject: 'Task Reminder',
-        text: `Task Reminder: ${task.text} at ${task.date} ${task.time}`,
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error('Error sending email:', error);
-        } else {
-          console.log('Email sent:', info.response);
-        }
-      });
-    }
-  });
-};
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-// Check for approaching tasks every 1 minute
-setInterval(() => {
-  fs.readFile(TASKS_FILE_PATH, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading tasks for notifications:', err);
-    } else {
-      const tasks = data
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => {
-          const [date, time, text, completed] = line.split(' - ');
-          return {
-            date,
-            time,
-            text,
-            completed: completed === 'true',
-          };
-        });
-
-      sendEmailNotifications(tasks);
-
-      // Save the tasks back to the file
-      const textTasks = tasks.map((task) => `${task.date} ${task.time} - ${task.text} - ${task.completed}`).join('\n');
-      fs.writeFile(TASKS_FILE_PATH, textTasks, 'utf8', (writeErr) => {
-        if (writeErr) {
-          console.error('Error writing tasks back to file:', writeErr);
-        }
-      });
-    }
-  });
-}, 60000); // 1 minute interval
 
