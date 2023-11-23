@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
 
 app.post('/saveTasks', (req, res) => {
   const tasks = req.body;
-  const textTasks = tasks.map((task) => `${task.date} ${task.time} - ${task.text} - ${task.completed}`).join('\n');
+  const textTasks = tasks.map((task) => `${task.date} ${task.time}  ${task.text}`).join('\n');
 
   fs.writeFile(TASKS_FILE_PATH, textTasks, 'utf8', (err) => {
     if (err) {
@@ -50,12 +50,14 @@ app.get('/getTasks', (req, res) => {
         .split('\n')
         .filter(Boolean)
         .map((line) => {
-          const [date, time, text, completed] = line.split(' - ');
+          const [date, time, ...textArray] = line.split(' ');
+          const completedIndex = textArray.indexOf('-');
+          const completed = completedIndex !== -1 && textArray[completedIndex + 1] === 'Completed';
           return {
             date,
             time,
-            text,
-            completed: completed === 'true',
+            text: completed ? textArray.slice(0, completedIndex).join(' ') : textArray.join(' '),
+            completed,
           };
         });
 
@@ -63,7 +65,6 @@ app.get('/getTasks', (req, res) => {
     }
   });
 });
-
 // Send email notifications for approaching tasks
 const sendEmailNotifications = (tasks) => {
   const currentTime = new Date();
