@@ -3,10 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const USERNAME = process.env.DB_USERNAME;
+const PASSWORD = process.env.DB_PASSWORD;
 
 const Connection = () => {
 
-    const MONGODB_URI = 'mongodb+srv://Orionty:dailytasks123@cluster0.eg4gliu.mongodb.net/';
+    const MONGODB_URI = `mongodb+srv://${USERNAME}:${PASSWORD}@cluster0.eg4gliu.mongodb.net/`;
     
     mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
